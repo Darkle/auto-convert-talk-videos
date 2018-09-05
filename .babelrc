@@ -1,0 +1,18 @@
+{
+  "presets": [
+    [
+      "@oigroup/babel-preset-lightscript",
+      {
+        "stdlib": false,
+        "bangCall": false,
+        "safeCall": false,
+        "existential": true,
+        "useRequire": true,
+        "flippedImports": false,
+        "disableJsx": false,
+        "disableFlow": false,
+        "placeholderArgs": false
+      }
+    ]
+  ]
+}

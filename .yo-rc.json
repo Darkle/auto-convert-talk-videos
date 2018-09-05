@@ -1,0 +1,18 @@
+{
+  "generator-lightscript": {
+    "promptValues": {
+      "lightscriptVersion": "@oigroup/LightScript (Fork)",
+      "platform": "Node.js",
+      "setCompilerOptions": true,
+      "stdlib": false,
+      "bangCall": false,
+      "safeCall": false,
+      "existential": true,
+      "useRequire": true,
+      "flippedImports": false,
+      "disableJsx": false,
+      "disableFlow": false,
+      "placeholderArgs": false
+    }
+  }
+}
