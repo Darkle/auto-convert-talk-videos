@@ -1,11 +1,12 @@
 {
+  "scripts": {
+    "ww": "cross-env NODE_ENV=development webpack --watch --no-stats",
+    "start": "cross-env NODE_ENV=production node app/appMain-compiled.js",
+    "build": "cross-env NODE_ENV=production webpack"
+  },
   "name": "auto-convert-talk-videos",
   "version": "0.0.1",
   "description": "",
-  "scripts": {
-    "ww": "cross-env NODE_ENV=development webpack --watch --no-stats",
-    "build": "cross-env NODE_ENV=production webpack"
-  },
   "devDependencies": {
     "@oigroup/babel-preset-lightscript": "^3.1.1",
     "@oigroup/lightscript-eslint": "^3.1.1",
