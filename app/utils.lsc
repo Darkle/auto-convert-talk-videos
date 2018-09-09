@@ -1,0 +1,10 @@
+import Maybe from 'folktale/maybe'
+import _ from 'lodash'
+
+MaybeGetPath<T>(obj:T={}, path:string):T ->
+  prop = _.get(obj, path)
+  prop ? Maybe.Just(prop) : Maybe.Nothing()
+
+export{
+  MaybeGetPath
+}

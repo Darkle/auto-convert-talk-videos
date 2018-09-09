@@ -1,0 +1,26 @@
+import winston from 'winston'
+import 'winston-daily-rotate-file'
+
+fileTransport = new (winston.transports.DailyRotateFile)({
+  filename: 'auto-convert-talk-videos-%DATE%.log',
+  dirname: 'logs'
+  datePattern: 'YYYY-MM-DD-HH',
+  maxSize: '20m',
+  maxFiles: 5
+})
+
+transports = [
+  fileTransport,
+]
+
+if ISDEV: transports.push(new winston.transports.Console())
+
+logger = winston.createLogger({
+  level: 'info',
+  format: if ISDEV: winston.format.prettyPrint() else: winston.format.json()
+  transports
+})
+
+export {
+  logger
+}

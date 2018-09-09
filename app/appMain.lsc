@@ -1,2 +1,49 @@
+import crypto from 'crypto'
 
-console.log('Hello from appMain.lsc running in Node.js!')
+import chokidar from 'chokidar'
+import Maybe from 'folktale/maybe'
+import delay from 'delay'
+import trash from 'trash'
+
+// import { MaybeGetPath } from './utils.lsc'
+import { dirToWatch } from '../config.json'
+import { convertVideo } from './ffmpeg.lsc'
+import { logger } from './logging.lsc'
+
+tenSecondsAsMilliseconds = 10000
+uniqueString = crypto.randomBytes(6).toString('hex')
+
+watcher = chokidar.watch(dirToWatch, {
+  ignored: /(^|[\/\\])\../,
+  persistent: true,
+  awaitWriteFinish: {
+    stabilityThreshold: 6000,
+    pollInterval: 100,
+  },
+  ignoreInitial: true,
+})
+
+watcher
+  .on('add', filePath ->
+    if !shouldConvertVideo(filePath): return Maybe.Nothing()
+    logger.info(`${ filePath } has been added to folder. Converting...`)
+    delay(tenSecondsAsMilliseconds)
+      .then(() -> convertVideo(filePath, uniqueString))
+      .then(() -> console.log('finished conversion'))
+      .then(() -> trash([filePath])) //move original file to trash
+      .catch(logger.error)
+  )
+
+/*****
+* The file will have .part if it's a jDownloader download, so we need to ignore that
+* untill the download completes.
+*
+* We also need to check for a unique string, becuase once ffmpeg has finished converting,
+* the new converted file shows up which triggers the watcher. So we need to ignore the new
+* converted file as its already converted.
+*/
+shouldConvertVideo(filePath:string):boolean ->
+  !filePath.endsWith('.part') && !filePath.includes(uniqueString)
+
+process.on('unhandledRejection', logger.error)
+process.on('uncaughtException', logger.error)

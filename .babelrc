@@ -3,7 +3,7 @@
     [
       "@oigroup/babel-preset-lightscript",
       {
-        "stdlib": false,
+        "stdlib": true,
         "bangCall": false,
         "safeCall": false,
         "existential": true,

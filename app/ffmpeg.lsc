@@ -1,0 +1,24 @@
+import path from 'path'
+
+import FFmkek from 'ffmkek'
+
+import { speed, dirToWatch as outputPath } from '../config.json'
+
+convertVideo(srcFilePath:string, uniqueString:string):Promise ->
+  new FFmkek()
+    .addInput(srcFilePath)
+    .addOption('-filter:v', `setpts=PTS/${ speed }`)
+    .addOption('-filter:a', `atempo=${ speed }`)
+    .write(generateOutputFilePath(srcFilePath, uniqueString))
+
+generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
+  fileBaseName = path.basename(srcFilePath)
+  fileExtension = path.extname(fileBaseName)
+  outputFileName = fileBaseName.slice(0, fileBaseName.lastIndexOf(fileExtension)) +
+    `-converted-${ uniqueString }` + fileExtension
+
+  path.join(outputPath, outputFileName)
+
+export {
+  convertVideo
+}
