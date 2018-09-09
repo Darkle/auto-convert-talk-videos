@@ -232,7 +232,7 @@ function lowerFFmpegProcessPriority(pid) {
 
   return _path2.default.join(_config.dirToWatch, outputFileName);
 }function generateFFmpegParams(srcFilePath, uniqueString) {
-  return ['-i'].concat(_toConsumableArray(ffmpegDefaultParams === void 0 ? [] : ffmpegDefaultParams), [generateOutputFilePath(srcFilePath, uniqueString)]);
+  return ['-i', srcFilePath].concat(_toConsumableArray(ffmpegDefaultParams === void 0 ? [] : ffmpegDefaultParams), [generateOutputFilePath(srcFilePath, uniqueString)]);
 }exports.convertVideo = convertVideo;
 
 /***/ }),

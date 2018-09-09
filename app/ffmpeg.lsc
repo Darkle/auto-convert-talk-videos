@@ -51,7 +51,8 @@ generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
 generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
   [
     '-i',
-    ...ffmpegDefaultParams
+    srcFilePath,
+    ...ffmpegDefaultParams,
     generateOutputFilePath(srcFilePath, uniqueString)
   ]
 
