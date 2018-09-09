@@ -1,15 +1,25 @@
+import { promisify } from 'util'
+import { execFile } from 'child_process'
 import path from 'path'
 
 import FFmkek from 'ffmkek'
 
 import { speed, dirToWatch as outputPath } from '../config.json'
 
+pExecFile = promisify(execFile)
+
 convertVideo(srcFilePath:string, uniqueString:string):Promise ->
   new FFmkek()
     .addInput(srcFilePath)
     .addOption('-filter:v', `setpts=PTS/${ speed }`)
     .addOption('-filter:a', `atempo=${ speed }`)
+    .addOption('-threads', `1`)
     .write(generateOutputFilePath(srcFilePath, uniqueString))
+
+// convertVideo(srcFilePath:string, uniqueString:string):Promise ->
+//   pExecFile('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString))
+//     .then()
+
 
 generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
   fileBaseName = path.basename(srcFilePath)
@@ -18,6 +28,27 @@ generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
     `-converted-${ uniqueString }` + fileExtension
 
   path.join(outputPath, outputFileName)
+
+// generateFFmpegCommand(srcFilePath:string, uniqueString:string):string ->
+//   `START /BELOWNORMAL ffmpeg -i ` +
+//   srcFilePath +
+//   ` -filter:v setpts=PTS/${ speed }` +
+//   ` -filter:a atempo=${ speed }` +
+//   ` -threads 1 ` +
+//   generateOutputFilePath(srcFilePath, uniqueString)
+
+// generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
+//   [
+//     '-i',
+//     srcFilePath,
+//     '-filter:v',
+//     `"setpts=PTS/${ speed }"`,
+//     '-filter:a',
+//     `"atempo=${ speed }"`,
+//     `-threads`,
+//     `1`,
+//     generateOutputFilePath(srcFilePath, uniqueString)
+//   ]
 
 export {
   convertVideo
