@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import path from 'path'
 
 import chokidar from 'chokidar'
 import Maybe from 'folktale/maybe'
@@ -10,14 +11,14 @@ import { dirToWatch } from '../config.json'
 import { convertVideo } from './ffmpeg.lsc'
 import { logger } from './logging.lsc'
 
-tenSecondsAsMilliseconds = 10000
+delayBeforeStartConverting = ISDEV ? 1000 : 5000
 uniqueString = crypto.randomBytes(6).toString('hex')
 
 watcher = chokidar.watch(dirToWatch, {
   ignored: /(^|[\/\\])\../,
   persistent: true,
   awaitWriteFinish: {
-    stabilityThreshold: 6000,
+    stabilityThreshold: ISDEV ? 2000 : 6000,
     pollInterval: 100,
   },
   ignoreInitial: true,
@@ -26,10 +27,12 @@ watcher = chokidar.watch(dirToWatch, {
 watcher
   .on('add', filePath ->
     if !shouldConvertVideo(filePath): return Maybe.Nothing()
-    logger.info(`${ filePath } has been added to folder. \nConversion will start in a moment...`)
-    delay(tenSecondsAsMilliseconds)
+    fileBaseName = path.basename(filePath)
+    logger.info(`${ fileBaseName } has been added to folder. \nConversion will start in a moment...`)
+
+    delay(delayBeforeStartConverting)
       .then(() -> convertVideo(filePath, uniqueString))
-      .then(() -> logger.info('finished conversion'))
+      .then(() -> logger.info(`finished converting ${ fileBaseName }`))
       .then(() -> del([filePath])) //move original file to trash
       .then(() -> logger.info('deleted original file'))
       .catch(logger.error)

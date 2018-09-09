@@ -100,6 +100,10 @@ var _crypto = __webpack_require__(/*! crypto */ "crypto");
 
 var _crypto2 = _interopRequireDefault(_crypto);
 
+var _path = __webpack_require__(/*! path */ "path");
+
+var _path2 = _interopRequireDefault(_path);
+
 var _chokidar = __webpack_require__(/*! chokidar */ "chokidar");
 
 var _chokidar2 = _interopRequireDefault(_chokidar);
@@ -124,7 +128,7 @@ var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var tenSecondsAsMilliseconds = 10000;
+var delayBeforeStartConverting =  true ? 1000 : undefined;
 
 // import { MaybeGetPath } from './utils.lsc'
 
@@ -134,7 +138,7 @@ var watcher = _chokidar2.default.watch(_config.dirToWatch, {
   ignored: /(^|[\/\\])\../,
   persistent: true,
   awaitWriteFinish: {
-    stabilityThreshold: 6000,
+    stabilityThreshold:  true ? 2000 : undefined,
     pollInterval: 100
   },
   ignoreInitial: true
@@ -142,11 +146,13 @@ var watcher = _chokidar2.default.watch(_config.dirToWatch, {
 
 watcher.on('add', function (filePath) {
   if (!shouldConvertVideo(filePath)) return _maybe2.default.Nothing();
-  _logging.logger.info(filePath + ' has been added to folder. \nConversion will start in a moment...');
-  return (0, _delay2.default)(tenSecondsAsMilliseconds).then(function () {
+  var fileBaseName = _path2.default.basename(filePath);
+  _logging.logger.info(fileBaseName + ' has been added to folder. \nConversion will start in a moment...');
+
+  return (0, _delay2.default)(delayBeforeStartConverting).then(function () {
     return (0, _ffmpeg.convertVideo)(filePath, uniqueString);
   }).then(function () {
-    return _logging.logger.info('finished conversion');
+    return _logging.logger.info('finished converting ' + fileBaseName);
   }).then(function () {
     return (0, _del2.default)([filePath]);
   }) //move original file to trash
@@ -185,59 +191,49 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.convertVideo = undefined;
 
-var _util = __webpack_require__(/*! util */ "util");
-
 var _child_process = __webpack_require__(/*! child_process */ "child_process");
 
 var _path = __webpack_require__(/*! path */ "path");
 
 var _path2 = _interopRequireDefault(_path);
 
-var _ffmkek = __webpack_require__(/*! ffmkek */ "ffmkek");
+var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
-var _ffmkek2 = _interopRequireDefault(_ffmkek);
+var _maybe2 = _interopRequireDefault(_maybe);
+
+var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
 var _config = __webpack_require__(/*! ../config.json */ "./config.json");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var pExecFile = (0, _util.promisify)(_child_process.execFile);
+var belowNormalProcessPriorityId = 16384;
 
 function convertVideo(srcFilePath, uniqueString) {
-  return new _ffmkek2.default().addInput(srcFilePath).addOption('-filter:v', 'setpts=PTS/' + _config.speed).addOption('-filter:a', 'atempo=' + _config.speed).addOption('-threads', '1').write(generateOutputFilePath(srcFilePath, uniqueString));
-} // convertVideo(srcFilePath:string, uniqueString:string):Promise ->
-//   pExecFile('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString))
-//     .then()
-
-
-function generateOutputFilePath(srcFilePath, uniqueString) {
+  return new Promise(function (resolve) {
+    var spawnedFFmpeg = (0, _child_process.spawn)('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString));
+    spawnedFFmpeg.on('exit', function (code) {
+      _logging.logger.info('spawnedFFmpeg exited with code ' + code);
+      return resolve();
+    });
+    lowerFFmpegProcessPriority(spawnedFFmpeg.pid);
+    return _maybe2.default.Nothing();
+  });
+} /*****
+  * Based on https://github.com/soyuka/renice/blob/master/index.js
+  */
+function lowerFFmpegProcessPriority(pid) {
+  (0, _child_process.spawn)('cmd.exe', ['/c', 'wmic process where processid=' + pid + ' CALL setpriority ' + belowNormalProcessPriorityId]);
+  return _maybe2.default.Nothing();
+}function generateOutputFilePath(srcFilePath, uniqueString) {
   var fileBaseName = _path2.default.basename(srcFilePath);
   var fileExtension = _path2.default.extname(fileBaseName);
   var outputFileName = fileBaseName.slice(0, fileBaseName.lastIndexOf(fileExtension)) + ('-converted-' + uniqueString) + fileExtension;
 
   return _path2.default.join(_config.dirToWatch, outputFileName);
-} // generateFFmpegCommand(srcFilePath:string, uniqueString:string):string ->
-//   `START /BELOWNORMAL ffmpeg -i ` +
-//   srcFilePath +
-//   ` -filter:v setpts=PTS/${ speed }` +
-//   ` -filter:a atempo=${ speed }` +
-//   ` -threads 1 ` +
-//   generateOutputFilePath(srcFilePath, uniqueString)
-
-// generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
-//   [
-//     '-i',
-//     srcFilePath,
-//     '-filter:v',
-//     `"setpts=PTS/${ speed }"`,
-//     '-filter:a',
-//     `"atempo=${ speed }"`,
-//     `-threads`,
-//     `1`,
-//     generateOutputFilePath(srcFilePath, uniqueString)
-//   ]
-
-exports.convertVideo = convertVideo;
+}function generateFFmpegParams(srcFilePath, uniqueString) {
+  return ['-i', srcFilePath, '-filter:v', 'setpts=PTS/' + _config.speed, '-filter:a', 'atempo=' + _config.speed, '-threads', '1', generateOutputFilePath(srcFilePath, uniqueString)];
+}exports.convertVideo = convertVideo;
 
 /***/ }),
 
@@ -352,17 +348,6 @@ module.exports = require("delay");
 
 /***/ }),
 
-/***/ "ffmkek":
-/*!*************************!*\
-  !*** external "ffmkek" ***!
-  \*************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("ffmkek");
-
-/***/ }),
-
 /***/ "folktale/maybe":
 /*!*********************************!*\
   !*** external "folktale/maybe" ***!
@@ -382,17 +367,6 @@ module.exports = require("folktale/maybe");
 /***/ (function(module, exports) {
 
 module.exports = require("path");
-
-/***/ }),
-
-/***/ "util":
-/*!***********************!*\
-  !*** external "util" ***!
-  \***********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("util");
 
 /***/ }),
 

@@ -1,25 +1,36 @@
-import { promisify } from 'util'
-import { execFile } from 'child_process'
+import { spawn } from 'child_process'
 import path from 'path'
 
-import FFmkek from 'ffmkek'
+import Maybe from 'folktale/maybe'
 
+import { logger } from './logging.lsc'
 import { speed, dirToWatch as outputPath } from '../config.json'
 
-pExecFile = promisify(execFile)
+belowNormalProcessPriorityId = 16384
 
 convertVideo(srcFilePath:string, uniqueString:string):Promise ->
-  new FFmkek()
-    .addInput(srcFilePath)
-    .addOption('-filter:v', `setpts=PTS/${ speed }`)
-    .addOption('-filter:a', `atempo=${ speed }`)
-    .addOption('-threads', `1`)
-    .write(generateOutputFilePath(srcFilePath, uniqueString))
+  return new Promise(resolve ->
+    spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString))
+    spawnedFFmpeg.on('exit', (code) => {
+      logger.info(`spawnedFFmpeg exited with code ${ code }`)
+      resolve()
+    })
+    lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
+    Maybe.Nothing()
+  )
 
-// convertVideo(srcFilePath:string, uniqueString:string):Promise ->
-//   pExecFile('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString))
-//     .then()
-
+/*****
+* Based on https://github.com/soyuka/renice/blob/master/index.js
+*/
+lowerFFmpegProcessPriority(pid:number) ->
+  spawn(
+    'cmd.exe',
+    [
+      '/c',
+      `wmic process where processid=${ pid } CALL setpriority ${ belowNormalProcessPriorityId }`,
+    ]
+  )
+  Maybe.Nothing()
 
 generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
   fileBaseName = path.basename(srcFilePath)
@@ -29,26 +40,18 @@ generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
 
   path.join(outputPath, outputFileName)
 
-// generateFFmpegCommand(srcFilePath:string, uniqueString:string):string ->
-//   `START /BELOWNORMAL ffmpeg -i ` +
-//   srcFilePath +
-//   ` -filter:v setpts=PTS/${ speed }` +
-//   ` -filter:a atempo=${ speed }` +
-//   ` -threads 1 ` +
-//   generateOutputFilePath(srcFilePath, uniqueString)
-
-// generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
-//   [
-//     '-i',
-//     srcFilePath,
-//     '-filter:v',
-//     `"setpts=PTS/${ speed }"`,
-//     '-filter:a',
-//     `"atempo=${ speed }"`,
-//     `-threads`,
-//     `1`,
-//     generateOutputFilePath(srcFilePath, uniqueString)
-//   ]
+generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
+  [
+    '-i',
+    srcFilePath,
+    '-filter:v',
+    `setpts=PTS/${ speed }`,
+    '-filter:a',
+    `atempo=${ speed }`,
+    `-threads`,
+    `1`,
+    generateOutputFilePath(srcFilePath, uniqueString)
+  ]
 
 export {
   convertVideo
