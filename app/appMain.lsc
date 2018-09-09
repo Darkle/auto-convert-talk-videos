@@ -6,7 +6,6 @@ import Maybe from 'folktale/maybe'
 import delay from 'delay'
 import del from 'del'
 
-// import { MaybeGetPath } from './utils.lsc'
 import { dirToWatch } from '../config.json'
 import { convertVideo } from './ffmpeg.lsc'
 import { logger } from './logging.lsc'
@@ -15,7 +14,7 @@ delayBeforeStartConverting = ISDEV ? 1000 : 5000
 uniqueString = crypto.randomBytes(6).toString('hex')
 
 watcher = chokidar.watch(dirToWatch, {
-  ignored: /(^|[\/\\])\../,
+  ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true,
   awaitWriteFinish: {
     stabilityThreshold: ISDEV ? 2000 : 6000,

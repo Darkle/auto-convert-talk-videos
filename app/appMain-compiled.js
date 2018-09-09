@@ -129,13 +129,10 @@ var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var delayBeforeStartConverting =  true ? 1000 : undefined;
-
-// import { MaybeGetPath } from './utils.lsc'
-
 var uniqueString = _crypto2.default.randomBytes(6).toString('hex');
 
 var watcher = _chokidar2.default.watch(_config.dirToWatch, {
-  ignored: /(^|[\/\\])\../,
+  ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true,
   awaitWriteFinish: {
     stabilityThreshold:  true ? 2000 : undefined,
@@ -207,7 +204,10 @@ var _config = __webpack_require__(/*! ../config.json */ "./config.json");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 var belowNormalProcessPriorityId = 16384;
+var ffmpegDefaultParams = ['-filter:v', 'setpts=PTS/' + _config.speed, '-filter:a', 'atempo=' + _config.speed, '-threads', '1'];
 
 function convertVideo(srcFilePath, uniqueString) {
   return new Promise(function (resolve) {
@@ -232,7 +232,7 @@ function lowerFFmpegProcessPriority(pid) {
 
   return _path2.default.join(_config.dirToWatch, outputFileName);
 }function generateFFmpegParams(srcFilePath, uniqueString) {
-  return ['-i', srcFilePath, '-filter:v', 'setpts=PTS/' + _config.speed, '-filter:a', 'atempo=' + _config.speed, '-threads', '1', generateOutputFilePath(srcFilePath, uniqueString)];
+  return ['-i'].concat(_toConsumableArray(ffmpegDefaultParams === void 0 ? [] : ffmpegDefaultParams), [generateOutputFilePath(srcFilePath, uniqueString)]);
 }exports.convertVideo = convertVideo;
 
 /***/ }),

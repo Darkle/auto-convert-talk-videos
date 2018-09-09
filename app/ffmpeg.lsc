@@ -7,6 +7,14 @@ import { logger } from './logging.lsc'
 import { speed, dirToWatch as outputPath } from '../config.json'
 
 belowNormalProcessPriorityId = 16384
+ffmpegDefaultParams = [
+  '-filter:v',
+  `setpts=PTS/${ speed }`,
+  '-filter:a',
+  `atempo=${ speed }`,
+  `-threads`,
+  `1`,
+]
 
 convertVideo(srcFilePath:string, uniqueString:string):Promise ->
   return new Promise(resolve ->
@@ -43,13 +51,7 @@ generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
 generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
   [
     '-i',
-    srcFilePath,
-    '-filter:v',
-    `setpts=PTS/${ speed }`,
-    '-filter:a',
-    `atempo=${ speed }`,
-    `-threads`,
-    `1`,
+    ...ffmpegDefaultParams
     generateOutputFilePath(srcFilePath, uniqueString)
   ]
 
