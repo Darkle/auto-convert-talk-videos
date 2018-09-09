@@ -11,10 +11,10 @@ belowNormalProcessPriorityId = 16384
 convertVideo(srcFilePath:string, uniqueString:string):Promise ->
   return new Promise(resolve ->
     spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString))
-    spawnedFFmpeg.on('exit', (code) => {
+    spawnedFFmpeg.on('exit', code ->
       logger.info(`spawnedFFmpeg exited with code ${ code }`)
       resolve()
-    })
+    )
     lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
     Maybe.Nothing()
   )
