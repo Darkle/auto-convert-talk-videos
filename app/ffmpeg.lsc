@@ -6,6 +6,7 @@ import Maybe from 'folktale/maybe'
 import { logger } from './logging.lsc'
 import { speed, dirToWatch as outputPath } from '../config.json'
 
+// https://docs.microsoft.com/en-us/windows/desktop/CIMWin32Prov/setpriority-method-in-class-win32-process
 belowNormalProcessPriorityId = 16384
 ffmpegDefaultParams = [
   '-filter:v',
