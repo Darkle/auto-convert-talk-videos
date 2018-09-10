@@ -65,4 +65,4 @@ const webpackOptions = {
   ]
 }
 
-module.exports = webpackOptions
+module.exports = webpackOptions   // eslint-disable-line fp/no-mutation

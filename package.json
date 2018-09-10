@@ -2,7 +2,9 @@
   "scripts": {
     "ww": "cross-env NODE_ENV=development webpack --watch --no-stats",
     "start": "cross-env NODE_ENV=production node app/appMain-compiled.js",
-    "build": "cross-env NODE_ENV=production webpack && pkg -t node8-win app/appMain-compiled.js -o build/auto-convert-talk-videos.exe"
+    "pkgBuild": "cross-env NODE_ENV=production webpack && pkg -t node8-win app/appMain-compiled.js -o build/auto-convert-talk-videos.exe",
+    "launchuiBuild": "launchui-packager auto-convert-talk-videos 0.0.1 app/appMain-compiled.js --out build --overwrite",
+    "nexeBuild": "nexe --input app/appMain-compiled.js --output build/auto-convert-talk-videos.exe --target windows-x64-8.11.4"
   },
   "name": "auto-convert-talk-videos",
   "version": "0.0.1",
@@ -13,9 +15,12 @@
     "@oigroup/lightscript-runtime": "^0.1.1",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
+    "create-nodew-exe": "^1.0.4",
     "cross-env": "^5.2.0",
     "eslint": "^4.8.0",
     "eslint-plugin-fp": "^2.3.0",
+    "launchui-packager": "^0.1.1",
+    "nexe": "^2.0.0-rc.34",
     "pkg": "^4.3.4",
     "webpack": "^4.17.2",
     "webpack-cli": "^3.1.0",
@@ -25,6 +30,7 @@
     "chokidar": "^2.0.4",
     "del": "^3.0.0",
     "folktale": "^2.3.0",
+    "jsonfile": "^5.0.0",
     "lodash": "^4.17.10",
     "winston": "^3.1.0",
     "winston-daily-rotate-file": "^3.3.2"
