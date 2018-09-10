@@ -2,7 +2,7 @@
   "scripts": {
     "ww": "cross-env NODE_ENV=development webpack --watch --no-stats",
     "start": "cross-env NODE_ENV=production node app/appMain-compiled.js",
-    "build": "cross-env NODE_ENV=production webpack"
+    "build": "cross-env NODE_ENV=production webpack && pkg -t node8-win app/appMain-compiled.js -o build/auto-convert-talk-videos.exe"
   },
   "name": "auto-convert-talk-videos",
   "version": "0.0.1",
@@ -16,6 +16,7 @@
     "cross-env": "^5.2.0",
     "eslint": "^4.8.0",
     "eslint-plugin-fp": "^2.3.0",
+    "pkg": "^4.3.4",
     "webpack": "^4.17.2",
     "webpack-cli": "^3.1.0",
     "webpack-node-externals": "^1.7.2"
