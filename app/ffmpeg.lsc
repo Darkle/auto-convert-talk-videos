@@ -24,6 +24,12 @@ convertVideo(srcFilePath:string, uniqueString:string):Promise ->
       logger.info(`spawnedFFmpeg exited with code ${ code }`)
       resolve()
     )
+    spawnedFFmpeg.stderr.on('data', (data) => {
+      logger.info(data.toString());
+    })
+    spawnedFFmpeg.stdout.on('data', (data) => {
+       logger.info(data.toString());
+    })
     lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
     Maybe.Nothing()
   )

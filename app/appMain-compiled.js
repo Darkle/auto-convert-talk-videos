@@ -144,7 +144,7 @@ var watcher = _chokidar2.default.watch(_config.dirToWatch, {
 watcher.on('add', function (filePath) {
   if (!shouldConvertVideo(filePath)) return _maybe2.default.Nothing();
   var fileBaseName = _path2.default.basename(filePath);
-  _logging.logger.info(fileBaseName + ' has been added to folder. \nConversion will start in a moment...');
+  _logging.logger.info(fileBaseName + ' has been added to folder. Conversion will start in a moment...');
 
   return (0, _delay2.default)(delayBeforeStartConverting).then(function () {
     return (0, _ffmpeg.convertVideo)(filePath, uniqueString);
@@ -167,7 +167,7 @@ watcher.on('add', function (filePath) {
 * converted file as its already converted.
 */
 function shouldConvertVideo(filePath) {
-  return !filePath.endsWith('.part') && !filePath.includes(uniqueString);
+  return !filePath.endsWith('.part') && !filePath.endsWith('.dashVideo') && !filePath.endsWith('.dashAudio') && !filePath.includes(uniqueString);
 }process.on('unhandledRejection', _logging.logger.error);
 process.on('uncaughtException', _logging.logger.error);
 
@@ -216,6 +216,12 @@ function convertVideo(srcFilePath, uniqueString) {
     spawnedFFmpeg.on('exit', function (code) {
       _logging.logger.info('spawnedFFmpeg exited with code ' + code);
       return resolve();
+    });
+    spawnedFFmpeg.stderr.on('data', function (data) {
+      return _logging.logger.info(data.toString());
+    });
+    spawnedFFmpeg.stdout.on('data', function (data) {
+      return _logging.logger.info(data.toString());
     });
     lowerFFmpegProcessPriority(spawnedFFmpeg.pid);
     return _maybe2.default.Nothing();

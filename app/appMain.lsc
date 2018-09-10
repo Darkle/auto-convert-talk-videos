@@ -27,7 +27,7 @@ watcher
   .on('add', filePath ->
     if !shouldConvertVideo(filePath): return Maybe.Nothing()
     fileBaseName = path.basename(filePath)
-    logger.info(`${ fileBaseName } has been added to folder. \nConversion will start in a moment...`)
+    logger.info(`${ fileBaseName } has been added to folder. Conversion will start in a moment...`)
 
     delay(delayBeforeStartConverting)
       .then(() -> convertVideo(filePath, uniqueString))
@@ -46,7 +46,10 @@ watcher
 * converted file as its already converted.
 */
 shouldConvertVideo(filePath:string):boolean ->
-  !filePath.endsWith('.part') && !filePath.includes(uniqueString)
+  !filePath.endsWith('.part') &&
+    !filePath.endsWith('.dashVideo') &&
+    !filePath.endsWith('.dashAudio') &&
+    !filePath.includes(uniqueString)
 
 process.on('unhandledRejection', logger.error)
 process.on('uncaughtException', logger.error)
