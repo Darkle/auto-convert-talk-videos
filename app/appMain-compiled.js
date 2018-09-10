@@ -96,10 +96,6 @@
 "use strict";
 
 
-var _crypto = __webpack_require__(/*! crypto */ "crypto");
-
-var _crypto2 = _interopRequireDefault(_crypto);
-
 var _path = __webpack_require__(/*! path */ "path");
 
 var _path2 = _interopRequireDefault(_path);
@@ -112,19 +108,15 @@ var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
 var _maybe2 = _interopRequireDefault(_maybe);
 
-var _del = __webpack_require__(/*! del */ "del");
-
-var _del2 = _interopRequireDefault(_del);
-
 var _config = __webpack_require__(/*! ../config.json */ "./config.json");
 
 var _ffmpeg = __webpack_require__(/*! ./ffmpeg.lsc */ "./app/ffmpeg.lsc");
 
 var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _utils = __webpack_require__(/*! ./utils.lsc */ "./app/utils.lsc");
 
-var uniqueString = _crypto2.default.randomBytes(6).toString('hex');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var watcher = _chokidar2.default.watch(_config.dirToWatch, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -140,15 +132,8 @@ watcher.on('add', function (filePath) {
   if (!shouldConvertVideo(filePath)) return _maybe2.default.Nothing();
   var fileBaseName = _path2.default.basename(filePath);
   _logging.logger.info(fileBaseName + ' has been added.');
-
-  return (0, _ffmpeg.convertVideo)(filePath, uniqueString).then(function () {
-    return _logging.logger.info('finished converting ' + fileBaseName);
-  }).then(function () {
-    return (0, _del2.default)([filePath]);
-  }) //move original file to trash
-  .then(function () {
-    return _logging.logger.info('deleted original file');
-  }).catch(_logging.logger.error);
+  (0, _ffmpeg.addFileToConversionQueue)(filePath);
+  return (0, _ffmpeg.convertVideo)();
 });
 
 /*****
@@ -160,7 +145,7 @@ watcher.on('add', function (filePath) {
 * converted file as its already converted.
 */
 function shouldConvertVideo(filePath) {
-  return !filePath.endsWith('.part') && !filePath.endsWith('.dashVideo') && !filePath.endsWith('.dashAudio') && !filePath.includes(uniqueString);
+  return !filePath.endsWith('.part') && !filePath.endsWith('.dashVideo') && !filePath.endsWith('.dashAudio') && !filePath.includes((0, _utils.getUniqueString)());
 }process.on('unhandledRejection', _logging.logger.error);
 process.on('uncaughtException', _logging.logger.error);
 
@@ -179,7 +164,7 @@ process.on('uncaughtException', _logging.logger.error);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.convertVideo = undefined;
+exports.addFileToConversionQueue = exports.convertVideo = undefined;
 
 var _child_process = __webpack_require__(/*! child_process */ "child_process");
 
@@ -190,6 +175,10 @@ var _path2 = _interopRequireDefault(_path);
 var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
 var _maybe2 = _interopRequireDefault(_maybe);
+
+var _del = __webpack_require__(/*! del */ "del");
+
+var _del2 = _interopRequireDefault(_del);
 
 var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
@@ -204,38 +193,55 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 // https://docs.microsoft.com/en-us/windows/desktop/CIMWin32Prov/setpriority-method-in-class-win32-process
 var belowNormalProcessPriorityId = 16384;
 var ffmpegDefaultParams = ['-filter:v', 'setpts=PTS/' + _config.speed, '-filter:a', 'atempo=' + _config.speed, '-threads', '1'];
+var queue = [];
+var conversionInProgress = false; // eslint-disable-line fp/no-let
 
-function convertVideo(srcFilePath, uniqueString) {
-  return new Promise(function (resolve) {
-    var spawnedFFmpeg = (0, _child_process.spawn)('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString));
-    spawnedFFmpeg.on('exit', function (code) {
-      _logging.logger.info('spawnedFFmpeg exited with code ' + code);
-      return resolve();
-    });
+function addFileToConversionQueue(filePath) {
+  queue.push(filePath);
+  return _maybe2.default.Nothing();
+}function convertVideo() {
+  if (!conversionInProgress && queue.length > 0) {
+    _logging.logger.info('Converting ' + _path2.default.basename(queue[0]));
+    conversionInProgress = true; // eslint-disable-line fp/no-mutation
+    var spawnedFFmpeg = (0, _child_process.spawn)('ffmpeg', generateFFmpegParams(queue[0]));
     /*****
     * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
     * wont exit properly. ¯\_(ツ)_/¯
     */
     spawnedFFmpeg.stderr.on('data', _utils.noop);
     spawnedFFmpeg.stdout.on('data', _utils.noop);
+    spawnedFFmpeg.on('exit', cleanUpAndStartNewVideoConversion);
     lowerFFmpegProcessPriority(spawnedFFmpeg.pid);
-    return _maybe2.default.Nothing();
-  });
+  }return _maybe2.default.Nothing();
+}function cleanUpAndStartNewVideoConversion(exitCode) {
+  _logging.logger.info('spawnedFFmpeg exited with code ' + exitCode);
+  _logging.logger.info('Finished converting ' + _path2.default.basename(queue[0]));
+  deleteOriginalFile(queue[0]);
+  queue.shift();
+  conversionInProgress = false; // eslint-disable-line fp/no-mutation
+  convertVideo();
+  return _maybe2.default.Nothing();
 } /*****
   * Based on https://github.com/soyuka/renice/blob/master/index.js
   */
 function lowerFFmpegProcessPriority(pid) {
   (0, _child_process.spawn)('cmd.exe', ['/c', 'wmic process where processid=' + pid + ' CALL setpriority ' + belowNormalProcessPriorityId]);
   return _maybe2.default.Nothing();
-}function generateOutputFilePath(srcFilePath, uniqueString) {
+}function generateOutputFilePath(srcFilePath) {
   var fileBaseName = _path2.default.basename(srcFilePath);
   var fileExtension = _path2.default.extname(fileBaseName);
-  var outputFileName = fileBaseName.slice(0, fileBaseName.lastIndexOf(fileExtension)) + ('-converted-' + uniqueString) + fileExtension;
+  var outputFileName = fileBaseName.slice(0, fileBaseName.lastIndexOf(fileExtension)) + ('-converted-' + (0, _utils.getUniqueString)()) + fileExtension;
 
   return _path2.default.join(_config.dirToWatch, outputFileName);
-}function generateFFmpegParams(srcFilePath, uniqueString) {
-  return ['-i', srcFilePath].concat(_toConsumableArray(ffmpegDefaultParams === void 0 ? [] : ffmpegDefaultParams), [generateOutputFilePath(srcFilePath, uniqueString)]);
+}function generateFFmpegParams(srcFilePath) {
+  return ['-i', srcFilePath].concat(_toConsumableArray(ffmpegDefaultParams === void 0 ? [] : ffmpegDefaultParams), [generateOutputFilePath(srcFilePath, (0, _utils.getUniqueString)())]);
+}function deleteOriginalFile(origFilePath) {
+  (0, _del2.default)([origFilePath]).then(function () {
+    return _logging.logger.info('Deleted orignal ' + _path2.default.basename(origFilePath) + ' file');
+  }).catch(_logging.logger.error);
+  return _maybe2.default.Nothing();
 }exports.convertVideo = convertVideo;
+exports.addFileToConversionQueue = addFileToConversionQueue;
 
 /***/ }),
 
@@ -297,7 +303,11 @@ exports.logger = logger;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.noop = exports.MaybeGetPath = undefined;
+exports.getUniqueString = exports.noop = exports.MaybeGetPath = undefined;
+
+var _crypto = __webpack_require__(/*! crypto */ "crypto");
+
+var _crypto2 = _interopRequireDefault(_crypto);
 
 var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
@@ -309,7 +319,10 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function MaybeGetPath() {
+var uniqueString = _crypto2.default.randomBytes(6).toString('hex');
+function getUniqueString() {
+  return uniqueString;
+}function MaybeGetPath() {
   var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var path = arguments[1];
 
@@ -319,6 +332,7 @@ function MaybeGetPath() {
   return _maybe2.default.Nothing();
 }exports.MaybeGetPath = MaybeGetPath;
 exports.noop = noop;
+exports.getUniqueString = getUniqueString;
 
 /***/ }),
 

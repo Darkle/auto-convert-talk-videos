@@ -1,15 +1,12 @@
-import crypto from 'crypto'
 import path from 'path'
 
 import chokidar from 'chokidar'
 import Maybe from 'folktale/maybe'
-import del from 'del'
 
 import { dirToWatch } from '../config.json'
-import { convertVideo } from './ffmpeg.lsc'
+import { addFileToConversionQueue, convertVideo } from './ffmpeg.lsc'
 import { logger } from './logging.lsc'
-
-uniqueString = crypto.randomBytes(6).toString('hex')
+import { getUniqueString } from './utils.lsc'
 
 watcher = chokidar.watch(dirToWatch, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -26,12 +23,8 @@ watcher
     if !shouldConvertVideo(filePath): return Maybe.Nothing()
     fileBaseName = path.basename(filePath)
     logger.info(`${ fileBaseName } has been added.`)
-
-    convertVideo(filePath, uniqueString)
-      .then(() -> logger.info(`finished converting ${ fileBaseName }`))
-      .then(() -> del([filePath])) //move original file to trash
-      .then(() -> logger.info('deleted original file'))
-      .catch(logger.error)
+    addFileToConversionQueue(filePath)
+    convertVideo()
   )
 
 /*****
@@ -46,7 +39,7 @@ shouldConvertVideo(filePath:string):boolean ->
   !filePath.endsWith('.part') &&
     !filePath.endsWith('.dashVideo') &&
     !filePath.endsWith('.dashAudio') &&
-    !filePath.includes(uniqueString)
+    !filePath.includes(getUniqueString())
 
 process.on('unhandledRejection', logger.error)
 process.on('uncaughtException', logger.error)

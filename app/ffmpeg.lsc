@@ -2,9 +2,10 @@ import { spawn } from 'child_process'
 import path from 'path'
 
 import Maybe from 'folktale/maybe'
+import del from 'del'
 
 import { logger } from './logging.lsc'
-import { noop } from './utils.lsc'
+import { noop, getUniqueString } from './utils.lsc'
 import { speed, dirToWatch as outputPath } from '../config.json'
 
 // https://docs.microsoft.com/en-us/windows/desktop/CIMWin32Prov/setpriority-method-in-class-win32-process
@@ -17,23 +18,36 @@ ffmpegDefaultParams = [
   `-threads`,
   `1`,
 ]
+queue = []
+let conversionInProgress = false  // eslint-disable-line fp/no-let
 
-convertVideo(srcFilePath:string, uniqueString:string):Promise ->
-  return new Promise(resolve ->
-    spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(srcFilePath, uniqueString))
-    spawnedFFmpeg.on('exit', code ->
-      logger.info(`spawnedFFmpeg exited with code ${ code }`)
-      resolve()
-    )
-    /*****
-    * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
-    * wont exit properly. ¯\_(ツ)_/¯
-    */
-    spawnedFFmpeg.stderr.on('data', noop)
-    spawnedFFmpeg.stdout.on('data', noop)
-    lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
+addFileToConversionQueue(filePath:string):Maybe ->
+  queue.push(filePath)
+  Maybe.Nothing()
+
+convertVideo():Maybe ->
+    if !conversionInProgress && queue.length > 0:
+      logger.info(`Converting ${ path.basename(queue[0]) }`)
+      now conversionInProgress = true   // eslint-disable-line fp/no-mutation
+      spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(queue[0]))
+      /*****
+      * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
+      * wont exit properly. ¯\_(ツ)_/¯
+      */
+      spawnedFFmpeg.stderr.on('data', noop)
+      spawnedFFmpeg.stdout.on('data', noop)
+      spawnedFFmpeg.on('exit', cleanUpAndStartNewVideoConversion)
+      lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
     Maybe.Nothing()
-  )
+
+cleanUpAndStartNewVideoConversion(exitCode:number):Maybe ->
+  logger.info(`spawnedFFmpeg exited with code ${ exitCode }`)
+  logger.info(`Finished converting ${ path.basename(queue[0]) }`)
+  deleteOriginalFile(queue[0])
+  queue.shift()
+  now conversionInProgress = false   // eslint-disable-line fp/no-mutation
+  convertVideo()
+  Maybe.Nothing()
 
 /*****
 * Based on https://github.com/soyuka/renice/blob/master/index.js
@@ -48,22 +62,29 @@ lowerFFmpegProcessPriority(pid:number) ->
   )
   Maybe.Nothing()
 
-generateOutputFilePath(srcFilePath:string, uniqueString:string):string ->
+generateOutputFilePath(srcFilePath:string):string ->
   fileBaseName = path.basename(srcFilePath)
   fileExtension = path.extname(fileBaseName)
   outputFileName = fileBaseName.slice(0, fileBaseName.lastIndexOf(fileExtension)) +
-    `-converted-${ uniqueString }` + fileExtension
+    `-converted-${ getUniqueString() }` + fileExtension
 
   path.join(outputPath, outputFileName)
 
-generateFFmpegParams(srcFilePath:string, uniqueString:string):Array<string> ->
+generateFFmpegParams(srcFilePath:string):Array<string> ->
   [
     '-i',
     srcFilePath,
     ...ffmpegDefaultParams,
-    generateOutputFilePath(srcFilePath, uniqueString)
+    generateOutputFilePath(srcFilePath, getUniqueString())
   ]
 
+deleteOriginalFile(origFilePath:string):Maybe ->
+  del([origFilePath])
+    .then(()-> logger.info(`Deleted orignal ${ path.basename(origFilePath) } file`))
+    .catch(logger.error)
+  Maybe.Nothing()
+
 export {
-  convertVideo
+  convertVideo,
+  addFileToConversionQueue,
 }

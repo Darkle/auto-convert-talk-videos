@@ -1,5 +1,10 @@
+import crypto from 'crypto'
+
 import Maybe from 'folktale/maybe'
 import _ from 'lodash'
+
+uniqueString = crypto.randomBytes(6).toString('hex')
+getUniqueString():string -> uniqueString
 
 MaybeGetPath<T>(obj:T={}, path:string):Maybe ->
   prop = _.get(obj, path)
@@ -10,4 +15,5 @@ noop() -> Maybe.Nothing()
 export{
   MaybeGetPath,
   noop,
+  getUniqueString,
 }
