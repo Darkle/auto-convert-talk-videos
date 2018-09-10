@@ -9,10 +9,7 @@ import { getUniqueString } from './utils.lsc'
 watcher = chokidar.watch(dirToWatch, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true,
-  awaitWriteFinish: {
-    stabilityThreshold: ISDEV ? 2000 : 6000,
-    pollInterval: 100,
-  },
+  awaitWriteFinish: true,
   ignoreInitial: true,
 })
 

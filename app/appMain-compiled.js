@@ -117,10 +117,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var watcher = _chokidar2.default.watch(_config.dirToWatch, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true,
-  awaitWriteFinish: {
-    stabilityThreshold:  true ? 2000 : undefined,
-    pollInterval: 100
-  },
+  awaitWriteFinish: true,
   ignoreInitial: true
 });
 
