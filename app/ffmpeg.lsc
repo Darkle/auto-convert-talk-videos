@@ -2,7 +2,7 @@ import { spawn } from 'child_process'
 import path from 'path'
 
 import Maybe from 'folktale/maybe'
-import del from 'del'
+import { remove as removeFile } from 'fs-extra'
 
 import { logger } from './logging.lsc'
 import { noop, getUniqueString } from './utils.lsc'
@@ -22,7 +22,7 @@ convertVideo():Maybe ->
   if !conversionInProgress && queue.length > 0:
     logger.info(`Converting ${ path.basename(queue[0]) }`)
     now conversionInProgress = true   // eslint-disable-line fp/no-mutation
-    spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(queue[0]))
+    spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(queue[0]), {windowsHide: true})
     /*****
     * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
     * wont exit properly. ¯\_(ツ)_/¯
@@ -78,7 +78,7 @@ generateFFmpegParams(srcFilePath:string):Array<string> ->
   ]
 
 deleteOriginalFile(origFilePath:string):Maybe ->
-  del([origFilePath])
+  removeFile(origFilePath)
     .then(()-> logger.info(`Deleted orignal ${ path.basename(origFilePath) } file`))
     .catch(logger.error)
   Maybe.Nothing()

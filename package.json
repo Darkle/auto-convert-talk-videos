@@ -2,9 +2,9 @@
   "scripts": {
     "ww": "cross-env NODE_ENV=development webpack --watch --no-stats",
     "start": "cross-env NODE_ENV=production node app/appMain-compiled.js",
-    "pkgBuild": "cross-env NODE_ENV=production webpack && pkg -t node8-win app/appMain-compiled.js -o build/auto-convert-talk-videos.exe",
-    "launchuiBuild": "launchui-packager auto-convert-talk-videos 0.0.1 app/appMain-compiled.js --out build --overwrite",
-    "nexeBuild": "nexe --input app/appMain-compiled.js --output build/auto-convert-talk-videos.exe --target windows-x64-8.11.4"
+    "pkgBuild": "cross-env NODE_ENV=production webpack && pkg -t node8-win app/appMain-compiled.js -o build/auto-convert-talk-videos-intermediate.exe && npm run silentModePatcher",
+    "silentModePatcher": "node -e \"require('create-nodew-exe')({src: 'build/auto-convert-talk-videos-intermediate.exe', dst: 'build/auto-convert-talk-videos.exe'})\" && npm run removeIntermediateExe",
+    "removeIntermediateExe": "trash build/auto-convert-talk-videos-intermediate.exe"
   },
   "name": "auto-convert-talk-videos",
   "version": "0.0.1",
@@ -28,8 +28,8 @@
   },
   "dependencies": {
     "chokidar": "^2.0.4",
-    "del": "^3.0.0",
     "folktale": "^2.3.0",
+    "fs-extra": "^7.0.0",
     "jsonfile": "^5.0.0",
     "lodash": "^4.17.10",
     "winston": "^3.1.0",

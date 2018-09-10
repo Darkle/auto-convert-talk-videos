@@ -81,17 +81,16 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = "./app/appMain.lsc");
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports) {
+/******/ ({
 
-module.exports = require("folktale/maybe");
-
-/***/ }),
-/* 1 */
+/***/ "./app/appMain.lsc":
+/*!*************************!*\
+  !*** ./app/appMain.lsc ***!
+  \*************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -102,31 +101,31 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getConfig = undefined;
 
-var _os = __webpack_require__(5);
+var _os = __webpack_require__(/*! os */ "os");
 
 var _os2 = _interopRequireDefault(_os);
 
-var _path = __webpack_require__(2);
+var _path = __webpack_require__(/*! path */ "path");
 
 var _path2 = _interopRequireDefault(_path);
 
-var _chokidar = __webpack_require__(6);
+var _chokidar = __webpack_require__(/*! chokidar */ "chokidar");
 
 var _chokidar2 = _interopRequireDefault(_chokidar);
 
-var _maybe = __webpack_require__(0);
+var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
 var _maybe2 = _interopRequireDefault(_maybe);
 
-var _jsonfile = __webpack_require__(7);
+var _jsonfile = __webpack_require__(/*! jsonfile */ "jsonfile");
 
 var _jsonfile2 = _interopRequireDefault(_jsonfile);
 
-var _ffmpeg = __webpack_require__(8);
+var _ffmpeg = __webpack_require__(/*! ./ffmpeg.lsc */ "./app/ffmpeg.lsc");
 
-var _logging = __webpack_require__(3);
+var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
-var _utils = __webpack_require__(4);
+var _utils = __webpack_require__(/*! ./utils.lsc */ "./app/utils.lsc");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -164,112 +163,12 @@ process.on('uncaughtException', _logging.logger.error);
 exports.getConfig = getConfig;
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
 
-module.exports = require("path");
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.logger = undefined;
-
-var _winston = __webpack_require__(11);
-
-var _winston2 = _interopRequireDefault(_winston);
-
-__webpack_require__(12);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var fileTransport = new _winston2.default.transports.DailyRotateFile({
-  filename: 'auto-convert-talk-videos-%DATE%.log',
-  dirname: 'logs',
-  datePattern: 'YYYY-MM-DD-HH',
-  maxSize: '20m',
-  maxFiles: 5
-});
-
-var transports = [fileTransport];
-
-if (false) {}
-
-var logger = _winston2.default.createLogger({
-  level: 'info',
-  format:  false ? undefined : _winston2.default.format.json(),
-  transports: transports
-});
-
-exports.logger = logger;
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getUniqueString = exports.noop = exports.MaybeGetPath = undefined;
-
-var _crypto = __webpack_require__(13);
-
-var _crypto2 = _interopRequireDefault(_crypto);
-
-var _maybe = __webpack_require__(0);
-
-var _maybe2 = _interopRequireDefault(_maybe);
-
-var _lodash = __webpack_require__(14);
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var uniqueString = _crypto2.default.randomBytes(6).toString('hex');
-function getUniqueString() {
-  return uniqueString;
-}function MaybeGetPath() {
-  var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var path = arguments[1];
-
-  var prop = _lodash2.default.get(obj, path);
-  return prop ? _maybe2.default.Just(prop) : _maybe2.default.Nothing();
-}function noop() {
-  return _maybe2.default.Nothing();
-}exports.MaybeGetPath = MaybeGetPath;
-exports.noop = noop;
-exports.getUniqueString = getUniqueString;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-module.exports = require("os");
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-module.exports = require("chokidar");
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-module.exports = require("jsonfile");
-
-/***/ }),
-/* 8 */
+/***/ "./app/ffmpeg.lsc":
+/*!************************!*\
+  !*** ./app/ffmpeg.lsc ***!
+  \************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -280,25 +179,23 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.addFileToConversionQueue = exports.convertVideo = undefined;
 
-var _child_process = __webpack_require__(9);
+var _child_process = __webpack_require__(/*! child_process */ "child_process");
 
-var _path = __webpack_require__(2);
+var _path = __webpack_require__(/*! path */ "path");
 
 var _path2 = _interopRequireDefault(_path);
 
-var _maybe = __webpack_require__(0);
+var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
 var _maybe2 = _interopRequireDefault(_maybe);
 
-var _del = __webpack_require__(10);
+var _fsExtra = __webpack_require__(/*! fs-extra */ "fs-extra");
 
-var _del2 = _interopRequireDefault(_del);
+var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
-var _logging = __webpack_require__(3);
+var _utils = __webpack_require__(/*! ./utils.lsc */ "./app/utils.lsc");
 
-var _utils = __webpack_require__(4);
-
-var _appMain = __webpack_require__(1);
+var _appMain = __webpack_require__(/*! ./appMain.lsc */ "./app/appMain.lsc");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -315,7 +212,7 @@ function addFileToConversionQueue(filePath) {
   if (!conversionInProgress && queue.length > 0) {
     _logging.logger.info('Converting ' + _path2.default.basename(queue[0]));
     conversionInProgress = true; // eslint-disable-line fp/no-mutation
-    var spawnedFFmpeg = (0, _child_process.spawn)('ffmpeg', generateFFmpegParams(queue[0]));
+    var spawnedFFmpeg = (0, _child_process.spawn)('ffmpeg', generateFFmpegParams(queue[0]), { windowsHide: true });
     /*****
     * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
     * wont exit properly. ¯\_(ツ)_/¯
@@ -348,7 +245,7 @@ function lowerFFmpegProcessPriority(pid) {
 }function generateFFmpegParams(srcFilePath) {
   return ['-i', srcFilePath, '-filter:v', 'setpts=PTS/' + (0, _appMain.getConfig)().speed, '-filter:a', 'atempo=' + (0, _appMain.getConfig)().speed, '-threads', '1', generateOutputFilePath(srcFilePath, (0, _utils.getUniqueString)())];
 }function deleteOriginalFile(origFilePath) {
-  (0, _del2.default)([origFilePath]).then(function () {
+  (0, _fsExtra.remove)(origFilePath).then(function () {
     return _logging.logger.info('Deleted orignal ' + _path2.default.basename(origFilePath) + ' file');
   }).catch(_logging.logger.error);
   return _maybe2.default.Nothing();
@@ -356,40 +253,218 @@ function lowerFFmpegProcessPriority(pid) {
 exports.addFileToConversionQueue = addFileToConversionQueue;
 
 /***/ }),
-/* 9 */
+
+/***/ "./app/logging.lsc":
+/*!*************************!*\
+  !*** ./app/logging.lsc ***!
+  \*************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.logger = undefined;
+
+var _winston = __webpack_require__(/*! winston */ "winston");
+
+var _winston2 = _interopRequireDefault(_winston);
+
+__webpack_require__(/*! winston-daily-rotate-file */ "winston-daily-rotate-file");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var fileTransport = new _winston2.default.transports.DailyRotateFile({
+  filename: 'auto-convert-talk-videos-%DATE%.log',
+  dirname: 'logs',
+  datePattern: 'YYYY-MM-DD-HH',
+  maxSize: '20m',
+  maxFiles: 5
+});
+
+var transports = [fileTransport];
+
+if (true) transports.push(new _winston2.default.transports.Console());
+
+var logger = _winston2.default.createLogger({
+  level: 'info',
+  format:  true ? _winston2.default.format.prettyPrint() : undefined,
+  transports: transports
+});
+
+exports.logger = logger;
+
+/***/ }),
+
+/***/ "./app/utils.lsc":
+/*!***********************!*\
+  !*** ./app/utils.lsc ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getUniqueString = exports.noop = exports.MaybeGetPath = undefined;
+
+var _crypto = __webpack_require__(/*! crypto */ "crypto");
+
+var _crypto2 = _interopRequireDefault(_crypto);
+
+var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
+
+var _maybe2 = _interopRequireDefault(_maybe);
+
+var _lodash = __webpack_require__(/*! lodash */ "lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var uniqueString = _crypto2.default.randomBytes(6).toString('hex');
+function getUniqueString() {
+  return uniqueString;
+}function MaybeGetPath() {
+  var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var path = arguments[1];
+
+  var prop = _lodash2.default.get(obj, path);
+  return prop ? _maybe2.default.Just(prop) : _maybe2.default.Nothing();
+}function noop() {
+  return _maybe2.default.Nothing();
+}exports.MaybeGetPath = MaybeGetPath;
+exports.noop = noop;
+exports.getUniqueString = getUniqueString;
+
+/***/ }),
+
+/***/ "child_process":
+/*!********************************!*\
+  !*** external "child_process" ***!
+  \********************************/
+/*! no static exports found */
 /***/ (function(module, exports) {
 
 module.exports = require("child_process");
 
 /***/ }),
-/* 10 */
+
+/***/ "chokidar":
+/*!***************************!*\
+  !*** external "chokidar" ***!
+  \***************************/
+/*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = require("del");
+module.exports = require("chokidar");
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports) {
 
-module.exports = require("winston");
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports) {
-
-module.exports = require("winston-daily-rotate-file");
-
-/***/ }),
-/* 13 */
+/***/ "crypto":
+/*!*************************!*\
+  !*** external "crypto" ***!
+  \*************************/
+/*! no static exports found */
 /***/ (function(module, exports) {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 14 */
+
+/***/ "folktale/maybe":
+/*!*********************************!*\
+  !*** external "folktale/maybe" ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("folktale/maybe");
+
+/***/ }),
+
+/***/ "fs-extra":
+/*!***************************!*\
+  !*** external "fs-extra" ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("fs-extra");
+
+/***/ }),
+
+/***/ "jsonfile":
+/*!***************************!*\
+  !*** external "jsonfile" ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("jsonfile");
+
+/***/ }),
+
+/***/ "lodash":
+/*!*************************!*\
+  !*** external "lodash" ***!
+  \*************************/
+/*! no static exports found */
 /***/ (function(module, exports) {
 
 module.exports = require("lodash");
 
+/***/ }),
+
+/***/ "os":
+/*!*********************!*\
+  !*** external "os" ***!
+  \*********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("os");
+
+/***/ }),
+
+/***/ "path":
+/*!***********************!*\
+  !*** external "path" ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("path");
+
+/***/ }),
+
+/***/ "winston":
+/*!**************************!*\
+  !*** external "winston" ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("winston");
+
+/***/ }),
+
+/***/ "winston-daily-rotate-file":
+/*!********************************************!*\
+  !*** external "winston-daily-rotate-file" ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("winston-daily-rotate-file");
+
 /***/ })
-/******/ ]);
+
+/******/ });
+//# sourceMappingURL=appMain-compiled.js.map
