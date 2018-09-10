@@ -125,13 +125,9 @@ var watcher = _chokidar2.default.watch(_config.dirToWatch, {
 });
 
 watcher.on('add', function (filePath) {
-  var _it = shouldConvertVideo(filePath); // eslint-disable-line fp/no-nil
-  if (_it === false) {
-    return _maybe2.default.Nothing();
-  } else if (_it === true) {
-    (0, _ffmpeg.addFileToConversionQueue)(filePath);
-    return (0, _ffmpeg.convertVideo)();
-  }
+  if (!shouldConvertVideo(filePath)) return _maybe2.default.Nothing();
+  (0, _ffmpeg.addFileToConversionQueue)(filePath);
+  return (0, _ffmpeg.convertVideo)();
 });
 
 /*****

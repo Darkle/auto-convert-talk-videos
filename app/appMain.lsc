@@ -17,12 +17,10 @@ watcher = chokidar.watch(dirToWatch, {
 })
 
 watcher
-  .on('add', filePath ->  // eslint-disable-line fp/no-nil
-    match shouldConvertVideo(filePath):
-      | false: Maybe.Nothing()
-      | true:
-        addFileToConversionQueue(filePath)
-        convertVideo()
+  .on('add', filePath ->
+    if !shouldConvertVideo(filePath): return Maybe.Nothing()
+    addFileToConversionQueue(filePath)
+    convertVideo()
   )
 
 /*****
