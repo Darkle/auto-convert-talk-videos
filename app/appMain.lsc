@@ -3,14 +3,12 @@ import path from 'path'
 
 import chokidar from 'chokidar'
 import Maybe from 'folktale/maybe'
-import delay from 'delay'
 import del from 'del'
 
 import { dirToWatch } from '../config.json'
 import { convertVideo } from './ffmpeg.lsc'
 import { logger } from './logging.lsc'
 
-delayBeforeStartConverting = ISDEV ? 1000 : 5000
 uniqueString = crypto.randomBytes(6).toString('hex')
 
 watcher = chokidar.watch(dirToWatch, {
@@ -27,10 +25,9 @@ watcher
   .on('add', filePath ->
     if !shouldConvertVideo(filePath): return Maybe.Nothing()
     fileBaseName = path.basename(filePath)
-    logger.info(`${ fileBaseName } has been added to folder. Conversion will start in a moment...`)
+    logger.info(`${ fileBaseName } has been added.`)
 
-    delay(delayBeforeStartConverting)
-      .then(() -> convertVideo(filePath, uniqueString))
+    convertVideo(filePath, uniqueString)
       .then(() -> logger.info(`finished converting ${ fileBaseName }`))
       .then(() -> del([filePath])) //move original file to trash
       .then(() -> logger.info('deleted original file'))

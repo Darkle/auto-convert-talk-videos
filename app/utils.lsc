@@ -1,10 +1,13 @@
 import Maybe from 'folktale/maybe'
 import _ from 'lodash'
 
-MaybeGetPath<T>(obj:T={}, path:string):T ->
+MaybeGetPath<T>(obj:T={}, path:string):Maybe ->
   prop = _.get(obj, path)
   prop ? Maybe.Just(prop) : Maybe.Nothing()
 
+noop() -> Maybe.Nothing()
+
 export{
-  MaybeGetPath
+  MaybeGetPath,
+  noop,
 }

@@ -112,10 +112,6 @@ var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
 
 var _maybe2 = _interopRequireDefault(_maybe);
 
-var _delay = __webpack_require__(/*! delay */ "delay");
-
-var _delay2 = _interopRequireDefault(_delay);
-
 var _del = __webpack_require__(/*! del */ "del");
 
 var _del2 = _interopRequireDefault(_del);
@@ -128,7 +124,6 @@ var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var delayBeforeStartConverting =  true ? 1000 : undefined;
 var uniqueString = _crypto2.default.randomBytes(6).toString('hex');
 
 var watcher = _chokidar2.default.watch(_config.dirToWatch, {
@@ -144,11 +139,9 @@ var watcher = _chokidar2.default.watch(_config.dirToWatch, {
 watcher.on('add', function (filePath) {
   if (!shouldConvertVideo(filePath)) return _maybe2.default.Nothing();
   var fileBaseName = _path2.default.basename(filePath);
-  _logging.logger.info(fileBaseName + ' has been added to folder. Conversion will start in a moment...');
+  _logging.logger.info(fileBaseName + ' has been added.');
 
-  return (0, _delay2.default)(delayBeforeStartConverting).then(function () {
-    return (0, _ffmpeg.convertVideo)(filePath, uniqueString);
-  }).then(function () {
+  return (0, _ffmpeg.convertVideo)(filePath, uniqueString).then(function () {
     return _logging.logger.info('finished converting ' + fileBaseName);
   }).then(function () {
     return (0, _del2.default)([filePath]);
@@ -200,6 +193,8 @@ var _maybe2 = _interopRequireDefault(_maybe);
 
 var _logging = __webpack_require__(/*! ./logging.lsc */ "./app/logging.lsc");
 
+var _utils = __webpack_require__(/*! ./utils.lsc */ "./app/utils.lsc");
+
 var _config = __webpack_require__(/*! ../config.json */ "./config.json");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -217,12 +212,12 @@ function convertVideo(srcFilePath, uniqueString) {
       _logging.logger.info('spawnedFFmpeg exited with code ' + code);
       return resolve();
     });
-    spawnedFFmpeg.stderr.on('data', function (data) {
-      return _logging.logger.info(data.toString());
-    });
-    spawnedFFmpeg.stdout.on('data', function (data) {
-      return _logging.logger.info(data.toString());
-    });
+    /*****
+    * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
+    * wont exit properly. ¯\_(ツ)_/¯
+    */
+    spawnedFFmpeg.stderr.on('data', _utils.noop);
+    spawnedFFmpeg.stdout.on('data', _utils.noop);
     lowerFFmpegProcessPriority(spawnedFFmpeg.pid);
     return _maybe2.default.Nothing();
   });
@@ -289,6 +284,44 @@ exports.logger = logger;
 
 /***/ }),
 
+/***/ "./app/utils.lsc":
+/*!***********************!*\
+  !*** ./app/utils.lsc ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.noop = exports.MaybeGetPath = undefined;
+
+var _maybe = __webpack_require__(/*! folktale/maybe */ "folktale/maybe");
+
+var _maybe2 = _interopRequireDefault(_maybe);
+
+var _lodash = __webpack_require__(/*! lodash */ "lodash");
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function MaybeGetPath() {
+  var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var path = arguments[1];
+
+  var prop = _lodash2.default.get(obj, path);
+  return prop ? _maybe2.default.Just(prop) : _maybe2.default.Nothing();
+}function noop() {
+  return _maybe2.default.Nothing();
+}exports.MaybeGetPath = MaybeGetPath;
+exports.noop = noop;
+
+/***/ }),
+
 /***/ "./config.json":
 /*!*********************!*\
   !*** ./config.json ***!
@@ -344,17 +377,6 @@ module.exports = require("del");
 
 /***/ }),
 
-/***/ "delay":
-/*!************************!*\
-  !*** external "delay" ***!
-  \************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("delay");
-
-/***/ }),
-
 /***/ "folktale/maybe":
 /*!*********************************!*\
   !*** external "folktale/maybe" ***!
@@ -363,6 +385,17 @@ module.exports = require("delay");
 /***/ (function(module, exports) {
 
 module.exports = require("folktale/maybe");
+
+/***/ }),
+
+/***/ "lodash":
+/*!*************************!*\
+  !*** external "lodash" ***!
+  \*************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("lodash");
 
 /***/ }),
 

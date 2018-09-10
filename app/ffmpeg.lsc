@@ -4,6 +4,7 @@ import path from 'path'
 import Maybe from 'folktale/maybe'
 
 import { logger } from './logging.lsc'
+import { noop } from './utils.lsc'
 import { speed, dirToWatch as outputPath } from '../config.json'
 
 // https://docs.microsoft.com/en-us/windows/desktop/CIMWin32Prov/setpriority-method-in-class-win32-process
@@ -24,12 +25,12 @@ convertVideo(srcFilePath:string, uniqueString:string):Promise ->
       logger.info(`spawnedFFmpeg exited with code ${ code }`)
       resolve()
     )
-    spawnedFFmpeg.stderr.on('data', (data) => {
-      logger.info(data.toString());
-    })
-    spawnedFFmpeg.stdout.on('data', (data) => {
-       logger.info(data.toString());
-    })
+    /*****
+    * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
+    * wont exit properly. ¯\_(ツ)_/¯
+    */
+    spawnedFFmpeg.stderr.on('data', noop)
+    spawnedFFmpeg.stdout.on('data', noop)
     lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
     Maybe.Nothing()
   )
