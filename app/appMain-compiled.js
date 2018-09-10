@@ -96,10 +96,6 @@
 "use strict";
 
 
-var _path = __webpack_require__(/*! path */ "path");
-
-var _path2 = _interopRequireDefault(_path);
-
 var _chokidar = __webpack_require__(/*! chokidar */ "chokidar");
 
 var _chokidar2 = _interopRequireDefault(_chokidar);
@@ -129,16 +125,18 @@ var watcher = _chokidar2.default.watch(_config.dirToWatch, {
 });
 
 watcher.on('add', function (filePath) {
-  if (!shouldConvertVideo(filePath)) return _maybe2.default.Nothing();
-  var fileBaseName = _path2.default.basename(filePath);
-  _logging.logger.info(fileBaseName + ' has been added.');
-  (0, _ffmpeg.addFileToConversionQueue)(filePath);
-  return (0, _ffmpeg.convertVideo)();
+  var _it = shouldConvertVideo(filePath); // eslint-disable-line fp/no-nil
+  if (_it === false) {
+    return _maybe2.default.Nothing();
+  } else if (_it === true) {
+    (0, _ffmpeg.addFileToConversionQueue)(filePath);
+    return (0, _ffmpeg.convertVideo)();
+  }
 });
 
 /*****
-* The file will have .part if it's a jDownloader download, so we need to ignore that
-* untill the download completes.
+* The file will have .part or .dashVideo or .dashAudio if it's a jDownloader download,
+* so we need to ignore that until the download completes.
 *
 * We also need to check for a unique string, becuase once ffmpeg has finished converting,
 * the new converted file shows up which triggers the watcher. So we need to ignore the new
@@ -197,6 +195,7 @@ var queue = [];
 var conversionInProgress = false; // eslint-disable-line fp/no-let
 
 function addFileToConversionQueue(filePath) {
+  _logging.logger.info(_path2.default.basename(filePath) + ' has been added to convert queue.');
   queue.push(filePath);
   return _maybe2.default.Nothing();
 }function convertVideo() {

@@ -22,23 +22,25 @@ queue = []
 let conversionInProgress = false  // eslint-disable-line fp/no-let
 
 addFileToConversionQueue(filePath:string):Maybe ->
+  logger.info(`${ path.basename(filePath) } has been added to convert queue.`)
   queue.push(filePath)
   Maybe.Nothing()
 
 convertVideo():Maybe ->
-    if !conversionInProgress && queue.length > 0:
-      logger.info(`Converting ${ path.basename(queue[0]) }`)
-      now conversionInProgress = true   // eslint-disable-line fp/no-mutation
-      spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(queue[0]))
-      /*****
-      * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
-      * wont exit properly. ¯\_(ツ)_/¯
-      */
-      spawnedFFmpeg.stderr.on('data', noop)
-      spawnedFFmpeg.stdout.on('data', noop)
-      spawnedFFmpeg.on('exit', cleanUpAndStartNewVideoConversion)
-      lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
-    Maybe.Nothing()
+  if !conversionInProgress && queue.length > 0:
+    logger.info(`Converting ${ path.basename(queue[0]) }`)
+    now conversionInProgress = true   // eslint-disable-line fp/no-mutation
+    spawnedFFmpeg = spawn('ffmpeg', generateFFmpegParams(queue[0]))
+    /*****
+    * For some reason if you omit the stderr/stdout listeners sometimes ffmpeg
+    * wont exit properly. ¯\_(ツ)_/¯
+    */
+    spawnedFFmpeg.stderr.on('data', noop)
+    spawnedFFmpeg.stdout.on('data', noop)
+    spawnedFFmpeg.on('exit', cleanUpAndStartNewVideoConversion)
+    lowerFFmpegProcessPriority(spawnedFFmpeg.pid)
+
+  Maybe.Nothing()
 
 cleanUpAndStartNewVideoConversion(exitCode:number):Maybe ->
   logger.info(`spawnedFFmpeg exited with code ${ exitCode }`)

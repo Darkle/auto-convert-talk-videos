@@ -1,5 +1,3 @@
-import path from 'path'
-
 import chokidar from 'chokidar'
 import Maybe from 'folktale/maybe'
 
@@ -19,17 +17,17 @@ watcher = chokidar.watch(dirToWatch, {
 })
 
 watcher
-  .on('add', filePath ->
-    if !shouldConvertVideo(filePath): return Maybe.Nothing()
-    fileBaseName = path.basename(filePath)
-    logger.info(`${ fileBaseName } has been added.`)
-    addFileToConversionQueue(filePath)
-    convertVideo()
+  .on('add', filePath ->  // eslint-disable-line fp/no-nil
+    match shouldConvertVideo(filePath):
+      | false: Maybe.Nothing()
+      | true:
+        addFileToConversionQueue(filePath)
+        convertVideo()
   )
 
 /*****
-* The file will have .part if it's a jDownloader download, so we need to ignore that
-* untill the download completes.
+* The file will have .part or .dashVideo or .dashAudio if it's a jDownloader download,
+* so we need to ignore that until the download completes.
 *
 * We also need to check for a unique string, becuase once ffmpeg has finished converting,
 * the new converted file shows up which triggers the watcher. So we need to ignore the new
